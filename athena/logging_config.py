@@ -5,7 +5,7 @@ Configures both the stdlib ``logging`` module and ``structlog`` so that:
 - Output is either human-readable text (development) or newline-delimited
   JSON (production / log aggregation).
 - A ``request_id`` field is automatically added to every log record when
-  the :mod:`athena.api.middleware` context var is set.
+  the athena.context ContextVar is set.
 
 Usage::
 
@@ -24,22 +24,18 @@ from typing import Any
 
 import structlog
 
+# Direct import — athena.context has no FastAPI dependency, so this is safe
+# from any layer including providers.
+from athena.context import get_request_id
+
 
 def _request_id_processor(
-    logger: Any, method: str, event_dict: dict
+    logger: Any, method: str, event_dict: dict,
 ) -> dict:
-    """Inject the current request_id (if any) into every log record.
-
-    Uses a lazy import so logging_config has no module-level dependency
-    on the API package (avoids circular import and layer violation).
-    """
-    try:
-        from athena.api.middleware import get_request_id  # lazy — avoids circular dep
-        rid = get_request_id()
-        if rid:
-            event_dict["request_id"] = rid
-    except ImportError:
-        pass  # middleware not available in non-API contexts
+    """Inject the current request_id (if any) into every log record."""
+    rid = get_request_id()
+    if rid:
+        event_dict["request_id"] = rid
     return event_dict
 
 
@@ -64,10 +60,8 @@ def configure_logging(level: str = "INFO", fmt: str = "text") -> None:
     ]
 
     if fmt == "json":
-        # ── JSON output (production) ──────────────────────────────────────────
         renderer: Any = structlog.processors.JSONRenderer()
     else:
-        # ── Human-readable output (development) ───────────────────────────────
         renderer = structlog.dev.ConsoleRenderer(colors=sys.stderr.isatty())
 
     structlog.configure(

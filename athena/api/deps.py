@@ -98,3 +98,31 @@ async def get_odds_service(
     session: AsyncSession = Depends(get_session),
 ) -> OddsService:
     return OddsService(OddsRepository(session), BookmakerRepository(session))
+
+
+# ── Provider access (request-scoped) ─────────────────────────────────────────
+
+
+async def get_provider(
+    name: str,
+    request: "Request",
+):
+    """Return a registered provider by name, or raise 503 if unavailable.
+
+    Args:
+        name:    Provider name (e.g. ``"football-data"``).
+        request: FastAPI Request — used to read ``app.state.providers``.
+
+    Raises:
+        HTTPException(503): If the provider registry is not initialised.
+        HTTPException(404): If no provider with *name* is registered.
+    """
+    from fastapi import HTTPException, Request  # local to avoid circular at module level
+
+    providers = getattr(request.app.state, "providers", None)
+    if providers is None:
+        raise HTTPException(503, detail="Provider registry not initialised")
+    provider = providers.get(name)
+    if provider is None:
+        raise HTTPException(404, detail=f"Provider '{name}' not registered")
+    return provider

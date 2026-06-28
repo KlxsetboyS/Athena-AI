@@ -81,6 +81,57 @@ class Settings(BaseSettings):
 
     # ── Validators ────────────────────────────────────────────────────────────
 
+
+    # ── HTTP Client ───────────────────────────────────────────────────────────
+
+    http_connect_timeout: float = 5.0
+    """Seconds to wait for TCP connection to establish."""
+
+    http_read_timeout: float = 30.0
+    """Seconds to wait for the server to send a response body."""
+
+    http_write_timeout: float = 10.0
+    """Seconds to wait to send the request body."""
+
+    http_pool_timeout: float = 5.0
+    """Seconds to wait for a connection from the pool."""
+
+    # ── Retry ─────────────────────────────────────────────────────────────────
+
+    retry_max_attempts: int = 3
+    """Total number of attempts (1 = no retries)."""
+
+    retry_backoff_base: float = 1.0
+    """Base wait time in seconds for exponential backoff."""
+
+    retry_backoff_max: float = 60.0
+    """Maximum wait time cap in seconds."""
+
+    retry_jitter: bool = True
+    """Randomise wait time by ±50 % to avoid thundering herd."""
+
+    # ── Football Data provider ────────────────────────────────────────────────
+
+    football_data_api_key: str | None = None
+    """API key for football-data.org.  None = provider disabled."""
+
+    football_data_base_url: str = "https://api.football-data.org/v4"
+    """Base URL for the football-data.org v4 API."""
+
+    football_data_rate_limit_per_minute: int = 10
+    """Request rate limit (tier free = 10/min)."""
+
+    # ── The Odds API provider ─────────────────────────────────────────────────
+
+    odds_api_key: str | None = None
+    """API key for the-odds-api.com.  None = provider disabled."""
+
+    odds_api_base_url: str = "https://api.the-odds-api.com/v4"
+    """Base URL for the-odds-api.com v4 API."""
+
+    odds_api_rate_limit_per_month: int = 500
+    """Request quota per month (tier free = 500)."""
+
     @field_validator("database_url")
     @classmethod
     def database_url_must_be_async(cls, v: str) -> str:

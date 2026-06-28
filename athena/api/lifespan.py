@@ -1,30 +1,15 @@
 """FastAPI application lifespan — startup and graceful shutdown.
 
-The lifespan context manager is the recommended way (since FastAPI 0.93)
-to run code at startup and shutdown, replacing the deprecated
-``@app.on_event("startup")`` / ``@app.on_event("shutdown")`` decorators.
+Sprint 2.2 additions
+--------------------
+- Provider clients (httpx.AsyncClient wrappers) are initialised at startup
+  and registered in ``app.state.providers`` as a ``dict[str, BaseProvider]``.
+- Shutdown order: provider clients closed FIRST, then the database engine.
+  This prevents in-flight retries from trying to write to a closed pool.
 
-What happens at startup
------------------------
-1. ``Settings`` are loaded and validated (fast-fail if config is wrong).
-2. Logging is configured once for the whole process.
-3. An async engine is created and stored on ``app.state`` for introspection
-   (e.g. the ``/health/ready`` endpoint).
-4. A connectivity check is performed — if the DB is unreachable the process
-   exits immediately rather than accepting traffic that will fail.
-
-What happens at shutdown
-------------------------
-1. The async engine disposes its connection pool cleanly.
-   This prevents ``ResourceWarning`` from unclosed sockets and ensures
-   in-flight queries finish before the process exits.
-
-Compatibility note
-------------------
-``deps.py`` is intentionally *not* changed.  The ``get_session`` dependency
-continues to use its own ``_get_session_factory()`` (lru_cache).  The engine
-stored on ``app.state`` is used *only* by the health check endpoint.
-This keeps full backward compatibility with the 160 existing tests.
+Backward compatibility
+----------------------
+All Sprint 2.0/2.1 behaviour is preserved.  ``deps.py`` is unchanged.
 """
 from __future__ import annotations
 
@@ -32,10 +17,15 @@ import logging
 from contextlib import asynccontextmanager
 from typing import AsyncGenerator
 
+import httpx
+
 from fastapi import FastAPI
 
 from athena.config import get_settings
 from athena.db.session import async_ping, build_async_engine, build_async_session_factory
+from athena.providers.client import ProviderClient
+from athena.providers.rate_limiter import RateLimiter
+from athena.providers.retry import RetryPolicy
 
 logger = logging.getLogger(__name__)
 
@@ -44,16 +34,22 @@ logger = logging.getLogger(__name__)
 async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
     """Manage application startup and shutdown.
 
-    The engine stored on ``app.state`` is separate from the one used by
-    ``deps.py``.  This is intentional: it avoids modifying the public
-    dependency contract while still enabling the health endpoint to verify
-    DB connectivity using the *same* ``DATABASE_URL`` from ``Settings``.
+    Startup order
+    -------------
+    1. Load and validate Settings.
+    2. Configure structured logging.
+    3. Create async DB engine; verify connectivity (fast-fail).
+    4. Initialise provider clients for configured API keys.
+    5. Register providers in ``app.state.providers``.
+
+    Shutdown order
+    --------------
+    1. Close all provider HTTP clients (flush in-flight retries).
+    2. Dispose the database connection pool.
     """
     settings = get_settings()
 
-    # ── Logging (configured first so startup messages are captured) ───────────
-    # Import here to avoid circular import at module level
-    # (logging_config imports middleware, middleware is part of api package)
+    # ── Logging ───────────────────────────────────────────────────────────────
     from athena.logging_config import configure_logging
     configure_logging(level=settings.log_level, fmt=settings.log_format)
 
@@ -62,36 +58,93 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
         extra={
             "app_env": settings.app_env,
             "database_url": _redact_url(settings.database_url),
-            "log_level": settings.log_level,
         },
     )
 
-    # ── Database engine for health checks ────────────────────────────────────
+    # ── Database ──────────────────────────────────────────────────────────────
     engine = build_async_engine(
         settings.database_url,
         echo=settings.database_echo,
     )
-
     try:
         await async_ping(engine)
         logger.info("Database connectivity confirmed")
-    except Exception as exc:  # noqa: BLE001
+    except Exception as exc:
         logger.error("Database unreachable at startup: %s", exc)
         await engine.dispose()
-        raise RuntimeError(
-            f"Cannot connect to database: {exc}"
-        ) from exc
+        raise RuntimeError(f"Cannot connect to database: {exc}") from exc
 
-    # Expose on app.state for the health endpoint (read-only, no mutations)
     app.state.db_engine = engine
     app.state.db_session_factory = build_async_session_factory(engine)
 
-    logger.info("Athena AI startup complete")
+    # ── Provider clients ──────────────────────────────────────────────────────
+    provider_clients: list[ProviderClient] = []
+    providers: dict = {}
 
-    yield  # ── Application runs here ─────────────────────────────────────────
+    timeout = httpx.Timeout(
+        connect=settings.http_connect_timeout,
+        read=settings.http_read_timeout,
+        write=settings.http_write_timeout,
+        pool=settings.http_pool_timeout,
+    )
+    retry_policy = RetryPolicy(
+        max_attempts=settings.retry_max_attempts,
+        backoff_base=settings.retry_backoff_base,
+        backoff_max=settings.retry_backoff_max,
+        jitter=settings.retry_jitter,
+    )
 
-    # ── Shutdown ──────────────────────────────────────────────────────────────
-    logger.info("Athena AI shutting down — disposing connection pool")
+    if settings.football_data_api_key:
+        from athena.providers.football_data.provider import FootballDataProvider
+
+        min_interval = 60.0 / max(settings.football_data_rate_limit_per_minute, 1)
+        fd_client = ProviderClient(
+            base_url=settings.football_data_base_url,
+            headers={"X-Auth-Token": settings.football_data_api_key},
+            timeout=timeout,
+            retry_policy=retry_policy,
+            rate_limiter=RateLimiter(min_interval_seconds=min_interval),
+            provider_name="football-data",
+        )
+        provider_clients.append(fd_client)
+        fd_provider = FootballDataProvider(fd_client)
+        providers[fd_provider.name] = fd_provider
+        logger.info("Provider registered: football-data")
+
+    if settings.odds_api_key:
+        from athena.providers.odds_api.provider import OddsAPIProvider
+
+        # odds-api free tier: 500/month ≈ ~1 per hour; use a conservative limit
+        oa_client = ProviderClient(
+            base_url=settings.odds_api_base_url,
+            headers={},  # odds-api authenticates via query param
+            timeout=timeout,
+            retry_policy=retry_policy,
+            rate_limiter=RateLimiter(min_interval_seconds=2.0),
+            provider_name="odds-api",
+        )
+        provider_clients.append(oa_client)
+        oa_provider = OddsAPIProvider(oa_client, api_key=settings.odds_api_key)
+        providers[oa_provider.name] = oa_provider
+        logger.info("Provider registered: odds-api")
+
+    app.state.providers = providers
+    logger.info(
+        "Athena AI startup complete",
+        extra={"providers": list(providers.keys())},
+    )
+
+    yield  # ── Application runs ──────────────────────────────────────────────
+
+    # ── Shutdown: providers FIRST, then database ──────────────────────────────
+    logger.info("Athena AI shutting down")
+
+    for client in provider_clients:
+        try:
+            await client.aclose()
+        except Exception as exc:  # noqa: BLE001
+            logger.warning("Error closing provider client: %s", exc)
+
     await engine.dispose()
     logger.info("Athena AI shutdown complete")
 

@@ -8,9 +8,9 @@ How it works
 1. The middleware reads the configurable request-ID header from the incoming
    request (default: ``X-Request-ID``).
 2. If the header is absent, a UUID4 is generated.
-3. The ID is stored in a :mod:`contextvars` ``ContextVar`` for the duration
+3. The ID is stored in a ContextVar (via ``athena.context``) for the duration
    of the request, making it accessible to any code in the call-stack
-   (including structlog processors and repository log calls).
+   (including structlog processors and ProviderClient log calls).
 4. The ID is echoed back in the response header so callers can correlate
    their own logs with Athena's.
 
@@ -18,31 +18,24 @@ The middleware is a plain ASGI callable (not a Starlette BaseHTTPMiddleware
 subclass) to avoid the double-exception-wrapping issue present in some
 Starlette versions.
 
-Usage::
-
-    app.add_middleware(RequestIDMiddleware, header_name="X-Request-ID")
+Backward compatibility
+----------------------
+``get_request_id`` is re-exported from this module so that existing imports
+from ``athena.api.middleware`` continue to work unchanged.
 """
 from __future__ import annotations
 
 import uuid
-from contextvars import ContextVar
-from typing import Callable
 
 from starlette.types import ASGIApp, Receive, Scope, Send
 
-# ── ContextVar ────────────────────────────────────────────────────────────────
+# ContextVar lives in athena.context — no FastAPI dependency there.
+# Re-exported here for backward compatibility with any code that imports
+# get_request_id from this module.
+from athena.context import get_request_id, reset_request_id, set_request_id
 
-_request_id_var: ContextVar[str | None] = ContextVar(
-    "request_id", default=None
-)
+__all__ = ["RequestIDMiddleware", "get_request_id"]
 
-
-def get_request_id() -> str | None:
-    """Return the request ID for the current async context, or ``None``."""
-    return _request_id_var.get()
-
-
-# ── Middleware ────────────────────────────────────────────────────────────────
 
 class RequestIDMiddleware:
     """ASGI middleware that assigns and propagates a per-request correlation ID.
@@ -68,12 +61,11 @@ class RequestIDMiddleware:
             headers.get(self.header_name, b"").decode() or str(uuid.uuid4())
         )
 
-        # Store in ContextVar — visible to all coroutines in this request
-        token = _request_id_var.set(request_id)
+        # Store in ContextVar via athena.context — visible to all coroutines
+        token = set_request_id(request_id)
 
         async def send_with_header(message):
             if message["type"] == "http.response.start":
-                # Append our header to the response
                 headers_list = list(message.get("headers", []))
                 headers_list.append(
                     (self.header_name, request_id.encode())
@@ -84,6 +76,5 @@ class RequestIDMiddleware:
         try:
             await self.app(scope, receive, send_with_header)
         finally:
-            # Reset ContextVar so it doesn't leak across requests in the same
-            # thread/task (important for test isolation)
-            _request_id_var.reset(token)
+            # Reset ContextVar so it doesn't leak across requests
+            reset_request_id(token)
