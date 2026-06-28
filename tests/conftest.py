@@ -37,10 +37,7 @@ from athena.db.enums import (
     CompetitionGender,
     CompetitionType,
     MatchStatus,
-    OddsFormat,
-    OddsMarket,
     SeasonStatus,
-    SelectionType,
     TeamGender,
 )
 from athena.repositories.competition import CompetitionRepository

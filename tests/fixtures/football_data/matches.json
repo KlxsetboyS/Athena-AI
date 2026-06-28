@@ -1,0 +1,78 @@
+{
+  "filters": {
+    "season": "2024"
+  },
+  "resultSet": {
+    "count": 2,
+    "first": "2024-08-16",
+    "last": "2025-05-25",
+    "played": 200
+  },
+  "competition": {
+    "id": 2021,
+    "name": "Premier League",
+    "code": "PL",
+    "type": "LEAGUE",
+    "emblem": "https://crests.football-data.org/PL.png"
+  },
+  "matches": [
+    {
+      "area": {"id": 2072, "name": "England", "code": "ENG", "flag": null},
+      "competition": {"id": 2021, "name": "Premier League", "code": "PL", "type": "LEAGUE", "emblem": null},
+      "season": {
+        "id": 1564,
+        "startDate": "2024-08-16",
+        "endDate": "2025-05-25",
+        "currentMatchday": 20,
+        "winner": null,
+        "stages": []
+      },
+      "id": 419126,
+      "utcDate": "2024-08-16T19:00:00Z",
+      "status": "FINISHED",
+      "matchday": 1,
+      "stage": "REGULAR_SEASON",
+      "group": null,
+      "lastUpdated": "2024-08-17T00:20:09Z",
+      "homeTeam": {"id": 57, "name": "Arsenal FC", "shortName": "Arsenal", "tla": "ARS", "crest": null},
+      "awayTeam": {"id": 328, "name": "Wolverhampton Wanderers FC", "shortName": "Wolves", "tla": "WOL", "crest": null},
+      "score": {
+        "winner": "HOME_TEAM",
+        "duration": "REGULAR",
+        "fullTime": {"home": 2, "away": 0},
+        "halfTime": {"home": 1, "away": 0}
+      },
+      "odds": {"msg": "Activate Odds-Package in User-Panel to retrieve odds."},
+      "referees": []
+    },
+    {
+      "area": {"id": 2072, "name": "England", "code": "ENG", "flag": null},
+      "competition": {"id": 2021, "name": "Premier League", "code": "PL", "type": "LEAGUE", "emblem": null},
+      "season": {
+        "id": 1564,
+        "startDate": "2024-08-16",
+        "endDate": "2025-05-25",
+        "currentMatchday": 20,
+        "winner": null,
+        "stages": []
+      },
+      "id": 419127,
+      "utcDate": "2025-03-10T15:00:00Z",
+      "status": "SCHEDULED",
+      "matchday": 28,
+      "stage": "REGULAR_SEASON",
+      "group": null,
+      "lastUpdated": "2024-12-16T00:00:09Z",
+      "homeTeam": {"id": 64, "name": "Liverpool FC", "shortName": "Liverpool", "tla": "LIV", "crest": null},
+      "awayTeam": {"id": 61, "name": "Chelsea FC", "shortName": "Chelsea", "tla": "CHE", "crest": null},
+      "score": {
+        "winner": null,
+        "duration": "REGULAR",
+        "fullTime": {"home": null, "away": null},
+        "halfTime": {"home": null, "away": null}
+      },
+      "odds": {"msg": "Activate Odds-Package in User-Panel to retrieve odds."},
+      "referees": []
+    }
+  ]
+}

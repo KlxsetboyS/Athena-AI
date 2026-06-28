@@ -20,7 +20,7 @@ from alembic import context
 # ── Athena models import (ensures all tables are registered in metadata) ─────
 # This import MUST happen before any reference to Base.metadata
 import athena.db.models  # noqa: F401
-from athena.db.base import Base, metadata as target_metadata
+from athena.db.base import metadata as target_metadata
 
 # ── Alembic Config object ─────────────────────────────────────────────────────
 config = context.config

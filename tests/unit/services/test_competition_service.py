@@ -16,7 +16,7 @@ from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 
-from athena.db.enums import CompetitionGender, CompetitionType
+from athena.db.enums import CompetitionType
 from athena.services.competition_service import CompetitionService
 
 

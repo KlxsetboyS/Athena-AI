@@ -1,0 +1,44 @@
+[
+  {
+    "id": "a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4",
+    "sport_key": "soccer_epl",
+    "sport_title": "EPL",
+    "commence_time": "2024-08-16T19:00:00Z",
+    "home_team": "Arsenal",
+    "away_team": "Wolves",
+    "bookmakers": [
+      {
+        "key": "bet365",
+        "title": "Bet365",
+        "last_update": "2024-08-16T18:30:00Z",
+        "markets": [
+          {
+            "key": "h2h",
+            "last_update": "2024-08-16T18:30:00Z",
+            "outcomes": [
+              {"name": "Arsenal", "price": 1.65},
+              {"name": "Wolves", "price": 5.50},
+              {"name": "Draw", "price": 4.00}
+            ]
+          }
+        ]
+      },
+      {
+        "key": "betfair",
+        "title": "Betfair",
+        "last_update": "2024-08-16T18:28:00Z",
+        "markets": [
+          {
+            "key": "h2h",
+            "last_update": "2024-08-16T18:28:00Z",
+            "outcomes": [
+              {"name": "Arsenal", "price": 1.68},
+              {"name": "Wolves", "price": 5.60},
+              {"name": "Draw", "price": 3.95}
+            ]
+          }
+        ]
+      }
+    ]
+  }
+]

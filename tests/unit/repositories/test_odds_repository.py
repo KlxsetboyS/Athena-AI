@@ -20,14 +20,12 @@ from __future__ import annotations
 from datetime import datetime, timedelta, timezone
 from decimal import Decimal
 
-import pytest
 import pytest_asyncio
 
 from athena.db.enums import OddsFormat, OddsMarket, SelectionType
-from athena.db.models.bookmaker import Bookmaker
 from athena.db.models.odds_selection import OddsSelection
 from athena.db.models.odds_snapshot import OddsSnapshot
-from athena.repositories.odds import BookmakerRepository, OddsRepository
+from athena.repositories.odds import BookmakerRepository
 
 
 # ── Helpers ───────────────────────────────────────────────────────────────────
@@ -159,7 +157,7 @@ class TestGetClosingSnapshot:
     async def test_returns_closing_line(
         self, odds_repo, db_session, sample_match, sample_bookmaker,
     ):
-        regular = await _make_snapshot(
+        await _make_snapshot(
             db_session, sample_match.id, sample_bookmaker.id,
             captured_at=BASE_TIME, is_closing=False,
         )
@@ -205,7 +203,7 @@ class TestGetHistory:
         t_old = BASE_TIME - timedelta(hours=10)
         t_new = BASE_TIME + timedelta(hours=10)
         await _make_snapshot(db_session, sample_match.id, sample_bookmaker_2.id, captured_at=t_old)
-        snap_new = await _make_snapshot(db_session, sample_match.id, sample_bookmaker_2.id, captured_at=t_new)
+        await _make_snapshot(db_session, sample_match.id, sample_bookmaker_2.id, captured_at=t_new)
         cutoff = BASE_TIME
         history = await odds_repo.get_history(
             sample_match.id,

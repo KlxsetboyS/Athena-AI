@@ -18,7 +18,7 @@ from __future__ import annotations
 
 import sys
 
-from athena.cli.db import build_parser, main
+from athena.cli.db import main
 
 
 def reset_database(db_url: str | None = None) -> None:
@@ -27,8 +27,7 @@ def reset_database(db_url: str | None = None) -> None:
     ⚠️  DESTRUCTIVE — only for development / CI.
     """
     import os
-    from pathlib import Path
-    from sqlalchemy import create_engine, text
+    from sqlalchemy import create_engine
 
     url = db_url or os.environ.get("DATABASE_URL", "sqlite:///athena.db")
     # Strip async driver prefix for synchronous introspection
