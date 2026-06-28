@@ -12,7 +12,6 @@ from __future__ import annotations
 
 import logging
 import uuid
-from datetime import datetime, timezone
 from typing import Any, Generic, Sequence, TypeVar
 
 from sqlalchemy import func, select

@@ -23,6 +23,7 @@ from fastapi import FastAPI
 
 from athena.config import get_settings
 from athena.db.session import async_ping, build_async_engine, build_async_session_factory
+from athena.providers.base import BaseProvider
 from athena.providers.client import ProviderClient
 from athena.providers.rate_limiter import RateLimiter
 from athena.providers.retry import RetryPolicy
@@ -79,7 +80,7 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
 
     # ── Provider clients ──────────────────────────────────────────────────────
     provider_clients: list[ProviderClient] = []
-    providers: dict = {}
+    providers: dict[str, BaseProvider] = {}
 
     timeout = httpx.Timeout(
         connect=settings.http_connect_timeout,

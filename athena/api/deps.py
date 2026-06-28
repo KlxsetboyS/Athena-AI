@@ -21,10 +21,11 @@ import os
 from collections.abc import AsyncGenerator
 from functools import lru_cache
 
-from fastapi import Depends
-from sqlalchemy.ext.asyncio import AsyncSession
+from fastapi import Depends, HTTPException, Request
+from sqlalchemy.ext.asyncio import AsyncEngine, AsyncSession, async_sessionmaker
 
 from athena.db.session import build_async_engine, build_async_session_factory
+from athena.providers.base import BaseProvider
 from athena.repositories.competition import CompetitionRepository
 from athena.repositories.match import MatchRepository
 from athena.repositories.odds import BookmakerRepository, OddsRepository
@@ -42,13 +43,13 @@ _DEFAULT_DB_URL = "sqlite+aiosqlite:///./athena.db"
 
 
 @lru_cache(maxsize=1)
-def _get_engine():
+def _get_engine() -> AsyncEngine:
     url = os.environ.get("DATABASE_URL", _DEFAULT_DB_URL)
     return build_async_engine(url, echo=False)
 
 
 @lru_cache(maxsize=1)
-def _get_session_factory():
+def _get_session_factory() -> async_sessionmaker[AsyncSession]:
     return build_async_session_factory(_get_engine())
 
 
@@ -105,8 +106,8 @@ async def get_odds_service(
 
 async def get_provider(
     name: str,
-    request: "Request",
-):
+    request: Request,
+) -> BaseProvider:
     """Return a registered provider by name, or raise 503 if unavailable.
 
     Args:
@@ -117,9 +118,9 @@ async def get_provider(
         HTTPException(503): If the provider registry is not initialised.
         HTTPException(404): If no provider with *name* is registered.
     """
-    from fastapi import HTTPException, Request  # local to avoid circular at module level
-
-    providers = getattr(request.app.state, "providers", None)
+    providers: dict[str, BaseProvider] | None = getattr(
+        request.app.state, "providers", None
+    )
     if providers is None:
         raise HTTPException(503, detail="Provider registry not initialised")
     provider = providers.get(name)

@@ -9,10 +9,9 @@ loading, and soft-delete mechanics all work end-to-end in a single transaction.
 """
 from __future__ import annotations
 
-from datetime import datetime, timedelta, timezone
+from datetime import datetime, timezone
 from decimal import Decimal
 
-import pytest
 import pytest_asyncio
 
 from athena.db.enums import (
@@ -25,7 +24,6 @@ from athena.db.enums import (
     SelectionType,
     TeamGender,
 )
-from athena.db.models.bookmaker import Bookmaker
 from athena.db.models.odds_selection import OddsSelection
 from athena.db.models.odds_snapshot import OddsSnapshot
 from athena.repositories.competition import CompetitionRepository

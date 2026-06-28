@@ -27,7 +27,7 @@ from __future__ import annotations
 
 import uuid
 
-from starlette.types import ASGIApp, Receive, Scope, Send
+from starlette.types import ASGIApp, Message, Receive, Scope, Send
 
 # ContextVar lives in athena.context — no FastAPI dependency there.
 # Re-exported here for backward compatibility with any code that imports
@@ -64,7 +64,7 @@ class RequestIDMiddleware:
         # Store in ContextVar via athena.context — visible to all coroutines
         token = set_request_id(request_id)
 
-        async def send_with_header(message):
+        async def send_with_header(message: Message) -> None:
             if message["type"] == "http.response.start":
                 headers_list = list(message.get("headers", []))
                 headers_list.append(

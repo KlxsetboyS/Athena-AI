@@ -26,7 +26,6 @@ Validates:
 """
 from __future__ import annotations
 
-import ast
 import configparser
 import sys
 from pathlib import Path

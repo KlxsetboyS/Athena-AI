@@ -13,9 +13,7 @@ from athena.providers.football_data.mapper import (
     map_match,
     map_matches,
     map_season,
-    map_team,
 )
-from athena.providers.models import CompetitionDTO, MatchDTO, SeasonDTO, TeamDTO
 
 FIXTURES = Path(__file__).parent.parent.parent.parent / "fixtures" / "football_data"
 
@@ -142,7 +140,6 @@ class TestMapMatch:
         assert dto.away_team_external_id == "fd.328"
 
     def test_maps_kickoff_utc(self):
-        from datetime import timezone
         dto = map_match(self._raw_match())
         assert dto.kickoff_time_utc.tzinfo is not None
         assert dto.kickoff_time_utc.tzinfo.utcoffset(None).total_seconds() == 0

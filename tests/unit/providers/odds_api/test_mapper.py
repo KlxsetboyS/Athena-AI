@@ -9,7 +9,6 @@ import pytest
 
 from athena.db.enums import OddsMarket, SelectionType
 from athena.providers.odds_api.mapper import map_odds_event, map_odds_response
-from athena.providers.models import OddsSnapshotDTO
 
 FIXTURES = Path(__file__).parent.parent.parent.parent / "fixtures" / "odds_api"
 

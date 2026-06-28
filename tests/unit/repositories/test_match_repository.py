@@ -15,12 +15,10 @@ Coverage targets
 """
 from __future__ import annotations
 
-import uuid
-from datetime import datetime, timedelta, timezone
+from datetime import datetime, timezone
 
-import pytest
 
-from athena.db.enums import MatchStatus, ResultType, MatchResultStatus, TeamGender, CompetitionType, CompetitionGender, SeasonStatus
+from athena.db.enums import MatchStatus, TeamGender
 
 
 # ── Helpers ───────────────────────────────────────────────────────────────────

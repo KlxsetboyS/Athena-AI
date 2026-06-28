@@ -1,7 +1,6 @@
 """Tests for the provider exception hierarchy."""
 from __future__ import annotations
 
-import pytest
 
 from athena.providers.exceptions import (
     ProviderAuthError,

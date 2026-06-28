@@ -4,7 +4,6 @@ No real HTTP calls are made.
 """
 from __future__ import annotations
 
-import json
 from unittest.mock import AsyncMock, patch
 
 import httpx
@@ -13,7 +12,6 @@ import pytest
 from athena.providers.client import ProviderClient
 from athena.providers.exceptions import (
     ProviderAuthError,
-    ProviderConnectionError,
     ProviderNotFoundError,
     ProviderParseError,
     ProviderRateLimitError,

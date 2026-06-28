@@ -2,12 +2,10 @@
 from __future__ import annotations
 
 import uuid
-from dataclasses import dataclass
 from datetime import datetime, timezone
 from decimal import Decimal
 from unittest.mock import AsyncMock, MagicMock
 
-import pytest
 
 from athena.db.enums import (
     CompetitionGender,
@@ -259,7 +257,7 @@ class TestIngestOdds:
         match.id = uuid.uuid4()
         repos.matches.get_by_external_id.return_value = match
 
-        result = await svc.ingest_odds("fd.419126")
+        await svc.ingest_odds("fd.419126")
 
         repos.bookmakers.create.assert_awaited_once()
 

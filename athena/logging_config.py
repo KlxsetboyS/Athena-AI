@@ -30,8 +30,8 @@ from athena.context import get_request_id
 
 
 def _request_id_processor(
-    logger: Any, method: str, event_dict: dict,
-) -> dict:
+    logger: Any, method: str, event_dict: dict[str, Any],
+) -> dict[str, Any]:
     """Inject the current request_id (if any) into every log record."""
     rid = get_request_id()
     if rid:

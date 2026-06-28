@@ -10,8 +10,6 @@ from __future__ import annotations
 import uuid
 from datetime import datetime, timezone
 
-import pytest
-import pytest_asyncio
 
 from athena.db.mixins import SoftDeleteMixin, TimestampMixin, UUIDMixin
 from athena.db.model import BaseModel
@@ -84,7 +82,6 @@ class TestSoftDeleteBehaviour:
         """Calling soft_delete twice should not raise and flag remains True."""
         obj = self._make_obj()
         obj.soft_delete()
-        first_ts = obj.deleted_at
         obj.soft_delete()
         assert obj.is_deleted is True
         # deleted_at is refreshed on each call – just ensure it is still set

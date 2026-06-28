@@ -9,7 +9,7 @@ from __future__ import annotations
 
 import logging
 from datetime import date
-from typing import ClassVar
+from typing import Any, ClassVar
 
 from athena.db.enums import OddsMarket
 from athena.providers.base import BaseProvider
@@ -65,7 +65,7 @@ class OddsAPIProvider(BaseProvider):
         self._api_key = api_key
         self._sport_key = sport_key
 
-    def _auth_params(self, extra: dict | None = None) -> dict:
+    def _auth_params(self, extra: dict[str, Any] | None = None) -> dict[str, Any]:
         """Return base query params including the API key."""
         params = {"apiKey": self._api_key}
         if extra:

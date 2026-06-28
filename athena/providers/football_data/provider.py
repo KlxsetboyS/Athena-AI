@@ -9,7 +9,7 @@ from __future__ import annotations
 
 import logging
 from datetime import date
-from typing import ClassVar
+from typing import Any, ClassVar
 
 from athena.db.enums import OddsMarket
 from athena.providers.base import BaseProvider
@@ -56,7 +56,7 @@ class FootballDataProvider(BaseProvider):
         country_code: str | None = None,
     ) -> list[CompetitionDTO]:
         """Return available competitions, optionally filtered by country."""
-        params: dict = {}
+        params: dict[str, Any] = {}
         if country_code:
             params["areas"] = country_code
 
@@ -129,7 +129,7 @@ class FootballDataProvider(BaseProvider):
     ) -> list[MatchDTO]:
         """Return matches for a competition with optional filters."""
         fd_id = _strip_prefix(competition_external_id, "fd.")
-        params: dict = {}
+        params: dict[str, Any] = {}
 
         if from_date:
             params["dateFrom"] = from_date.isoformat()

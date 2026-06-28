@@ -6,7 +6,6 @@ import pytest
 from athena.providers.exceptions import (
     ProviderAuthError,
     ProviderConnectionError,
-    ProviderDataError,
     ProviderParseError,
     ProviderRateLimitError,
     ProviderServerError,

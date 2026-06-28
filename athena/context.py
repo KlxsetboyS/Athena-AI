@@ -36,7 +36,7 @@ def get_request_id() -> str | None:
     return _request_id_var.get()
 
 
-def set_request_id(request_id: str) -> Token:
+def set_request_id(request_id: str) -> Token[str | None]:
     """Set the request ID for the current async context.
 
     Returns the token needed to reset the variable in a ``finally`` block.
@@ -44,6 +44,6 @@ def set_request_id(request_id: str) -> Token:
     return _request_id_var.set(request_id)
 
 
-def reset_request_id(token: Token) -> None:
+def reset_request_id(token: Token[str | None]) -> None:
     """Reset the request ID to its previous value using the token."""
     _request_id_var.reset(token)

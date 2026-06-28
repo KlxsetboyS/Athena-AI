@@ -30,6 +30,8 @@ football-data.org statuses → Athena MatchStatus:
 """
 from __future__ import annotations
 
+from typing import Any
+
 from athena.db.enums import (
     CompetitionGender,
     CompetitionType,
@@ -64,7 +66,7 @@ _COMPETITION_TYPE: dict[str, CompetitionType] = {
 
 # ── Public mapper functions ───────────────────────────────────────────────────
 
-def map_competition(raw: dict) -> CompetitionDTO:
+def map_competition(raw: dict[str, Any]) -> CompetitionDTO:
     """Map a single competition object from football-data.org to a DTO.
 
     Args:
@@ -86,7 +88,7 @@ def map_competition(raw: dict) -> CompetitionDTO:
     )
 
 
-def map_competitions(raw: dict) -> list[CompetitionDTO]:
+def map_competitions(raw: dict[str, Any]) -> list[CompetitionDTO]:
     """Map the full competitions list response.
 
     Args:
@@ -95,7 +97,7 @@ def map_competitions(raw: dict) -> list[CompetitionDTO]:
     return [map_competition(c) for c in raw.get("competitions", [])]
 
 
-def map_season(raw: dict, competition_external_id: str) -> SeasonDTO:
+def map_season(raw: dict[str, Any], competition_external_id: str) -> SeasonDTO:
     """Map a season object nested inside a competition response.
 
     Args:
@@ -128,7 +130,7 @@ def map_season(raw: dict, competition_external_id: str) -> SeasonDTO:
     )
 
 
-def map_team(raw: dict) -> TeamDTO:
+def map_team(raw: dict[str, Any]) -> TeamDTO:
     """Map a team object (as it appears inside a match) to a DTO.
 
     Args:
@@ -143,7 +145,7 @@ def map_team(raw: dict) -> TeamDTO:
     )
 
 
-def map_match(raw: dict) -> MatchDTO:
+def map_match(raw: dict[str, Any]) -> MatchDTO:
     """Map a single match object from football-data.org to a DTO.
 
     Args:
@@ -178,7 +180,7 @@ def map_match(raw: dict) -> MatchDTO:
     )
 
 
-def map_matches(raw: dict) -> list[MatchDTO]:
+def map_matches(raw: dict[str, Any]) -> list[MatchDTO]:
     """Map the full matches list response.
 
     Args:

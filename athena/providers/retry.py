@@ -27,7 +27,6 @@ from dataclasses import dataclass, field
 
 from athena.providers.exceptions import (
     ProviderConnectionError,
-    ProviderNetworkError,
     ProviderRateLimitError,
     ProviderServerError,
 )
@@ -83,7 +82,7 @@ class RetryPolicy:
                      attempt will be ``attempt + 1``).
         """
         # Exponential: 1s, 2s, 4s, 8s … capped at backoff_max
-        delay = min(self.backoff_base * (2 ** (attempt - 1)), self.backoff_max)
+        delay: float = min(self.backoff_base * (2 ** (attempt - 1)), self.backoff_max)
         if self.jitter:
             delay *= random.uniform(0.5, 1.5)
         return delay

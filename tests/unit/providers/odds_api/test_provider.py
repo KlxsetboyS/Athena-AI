@@ -5,7 +5,6 @@ import json
 from pathlib import Path
 from unittest.mock import AsyncMock
 
-import pytest
 
 from athena.db.enums import OddsMarket
 from athena.providers.odds_api.provider import OddsAPIProvider

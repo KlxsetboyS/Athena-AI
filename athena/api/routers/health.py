@@ -30,7 +30,7 @@ router = APIRouter(tags=["meta"])
 
 
 @router.get("/health")
-async def liveness() -> dict:
+async def liveness() -> dict[str, str]:
     """Liveness probe — always 200 while the process is running."""
     return {"status": "ok", "service": "athena-ai"}
 

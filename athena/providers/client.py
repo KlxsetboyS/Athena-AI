@@ -23,13 +23,14 @@ and closed during shutdown.  Never create a client per request.
 from __future__ import annotations
 
 import logging
+from types import TracebackType
+from typing import Any, cast
 
 import httpx
 
 from athena.context import get_request_id
 from athena.providers.exceptions import (
     ProviderAuthError,
-    ProviderConnectionError,
     ProviderNotFoundError,
     ProviderParseError,
     ProviderRateLimitError,
@@ -78,8 +79,8 @@ class ProviderClient:
         self,
         path: str,
         *,
-        params: dict | None = None,
-    ) -> dict:
+        params: dict[str, Any] | None = None,
+    ) -> dict[str, Any]:
         """Execute a GET request with retry and rate limiting.
 
         Args:
@@ -98,7 +99,6 @@ class ProviderClient:
             ProviderParseError:      Response body is not valid JSON.
         """
         attempt = 0
-        last_exc: Exception | None = None
 
         while True:
             attempt += 1
@@ -134,7 +134,6 @@ class ProviderClient:
                 raise
 
             except Exception as exc:
-                last_exc = exc
                 if not self._retry_policy.should_retry(exc, attempt):
                     raise
 
@@ -158,7 +157,7 @@ class ProviderClient:
 
     # ── Private helpers ───────────────────────────────────────────────────────
 
-    def _parse_and_raise(self, response: httpx.Response) -> dict:
+    def _parse_and_raise(self, response: httpx.Response) -> dict[str, Any]:
         """Convert HTTP status codes to typed exceptions; parse body."""
         status = response.status_code
 
@@ -170,7 +169,7 @@ class ProviderClient:
 
         if status == 404:
             raise ProviderNotFoundError(
-                f"Resource not found (HTTP 404)",
+                "Resource not found (HTTP 404)",
                 provider=self._provider,
             )
 
@@ -200,7 +199,7 @@ class ProviderClient:
             )
 
         try:
-            return response.json()
+            return cast(dict[str, Any], response.json())
         except Exception as exc:
             raise ProviderParseError(
                 f"Failed to parse JSON response: {exc}",
@@ -212,5 +211,10 @@ class ProviderClient:
     async def __aenter__(self) -> "ProviderClient":
         return self
 
-    async def __aexit__(self, *args) -> None:
+    async def __aexit__(
+        self,
+        exc_type: type[BaseException] | None = None,
+        exc_value: BaseException | None = None,
+        traceback: TracebackType | None = None,
+    ) -> None:
         await self.aclose()

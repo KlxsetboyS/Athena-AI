@@ -1,7 +1,6 @@
 """Tests for athena.context — ContextVar for request_id."""
 from __future__ import annotations
 
-import pytest
 
 from athena.context import get_request_id, reset_request_id, set_request_id
 

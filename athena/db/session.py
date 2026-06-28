@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 from collections.abc import AsyncGenerator, Generator
+from typing import Any
 
 from sqlalchemy import create_engine, text
 from sqlalchemy.engine import Engine
@@ -16,7 +17,7 @@ from sqlalchemy.orm import Session, sessionmaker
 
 # ── Synchronous (used by Alembic / validation scripts) ───────────────────────
 
-def build_engine(url: str, **kwargs) -> Engine:
+def build_engine(url: str, **kwargs: Any) -> Engine:
     """Create a synchronous SQLAlchemy engine."""
     return create_engine(url, **kwargs)
 
@@ -48,7 +49,7 @@ def ping(engine: Engine) -> bool:
 
 # ── Asynchronous (production use) ─────────────────────────────────────────────
 
-def build_async_engine(url: str, **kwargs) -> AsyncEngine:
+def build_async_engine(url: str, **kwargs: Any) -> AsyncEngine:
     """Create an async SQLAlchemy engine.
 
     Args:

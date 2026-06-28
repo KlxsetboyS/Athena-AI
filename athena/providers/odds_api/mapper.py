@@ -20,8 +20,9 @@ against the event's home_team and away_team fields.
 """
 from __future__ import annotations
 
-from datetime import datetime
+from datetime import datetime, timezone
 from decimal import Decimal
+from typing import Any
 
 from athena.db.enums import OddsMarket, SelectionType
 from athena.providers.models import OddsSelectionDTO, OddsSnapshotDTO
@@ -37,7 +38,7 @@ _MARKET_MAP: dict[str, OddsMarket] = {
 
 # ── Public mapper functions ───────────────────────────────────────────────────
 
-def map_odds_event(raw: dict) -> list[OddsSnapshotDTO]:
+def map_odds_event(raw: dict[str, Any]) -> list[OddsSnapshotDTO]:
     """Map one event (match) from the-odds-api.com response to a list of snapshots.
 
     Each bookmaker × market combination becomes one ``OddsSnapshotDTO``.
@@ -52,7 +53,10 @@ def map_odds_event(raw: dict) -> list[OddsSnapshotDTO]:
     home_team = raw.get("home_team", "")
     away_team = raw.get("away_team", "")
     commence_time_str = raw.get("commence_time", "")
-    captured_at = _parse_utc(commence_time_str)
+    parsed_captured_at = _parse_utc(commence_time_str)
+    # Last-resort fallback: if the event itself has no parsable commence_time,
+    # fall back to "now" rather than propagate None into a non-optional field.
+    captured_at: datetime = parsed_captured_at or datetime.now(timezone.utc)
 
     snapshots: list[OddsSnapshotDTO] = []
 
@@ -60,7 +64,7 @@ def map_odds_event(raw: dict) -> list[OddsSnapshotDTO]:
         bk_slug = bookmaker.get("key", "unknown")
         bk_name = bookmaker.get("title", bk_slug)
         bk_update_str = bookmaker.get("last_update", commence_time_str)
-        bk_captured_at = _parse_utc(bk_update_str) or captured_at
+        bk_captured_at: datetime = _parse_utc(bk_update_str) or captured_at
 
         for market in bookmaker.get("markets", []):
             market_key = market.get("key", "")
@@ -69,7 +73,7 @@ def map_odds_event(raw: dict) -> list[OddsSnapshotDTO]:
                 continue  # skip unsupported markets silently
 
             market_update_str = market.get("last_update", bk_update_str)
-            market_captured_at = _parse_utc(market_update_str) or bk_captured_at
+            market_captured_at: datetime = _parse_utc(market_update_str) or bk_captured_at
 
             selections = _map_selections(
                 market.get("outcomes", []),
@@ -95,7 +99,7 @@ def map_odds_event(raw: dict) -> list[OddsSnapshotDTO]:
     return snapshots
 
 
-def map_odds_response(raw: list) -> list[OddsSnapshotDTO]:
+def map_odds_response(raw: list[dict[str, Any]]) -> list[OddsSnapshotDTO]:
     """Map the full odds API response (a list of events).
 
     Args:
@@ -120,7 +124,7 @@ def _parse_utc(dt_str: str) -> datetime | None:
 
 
 def _map_selections(
-    outcomes: list[dict],
+    outcomes: list[dict[str, Any]],
     *,
     home_team: str,
     away_team: str,
