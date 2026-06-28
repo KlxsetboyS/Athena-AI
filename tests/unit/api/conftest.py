@@ -27,7 +27,7 @@ from athena.api.deps import (
 
 def _make_app_with_overrides(**overrides):
     """Return (app, client_factory) with dependency overrides applied."""
-    application = create_app()
+    application = create_app(use_lifespan=False)
     for dep, mock in overrides.items():
         application.dependency_overrides[dep] = lambda m=mock: m
     return application
@@ -63,7 +63,7 @@ async def api_client(
     competition_mock, season_mock, team_mock, match_mock, odds_mock
 ):
     """AsyncClient wired to the full FastAPI app with all services mocked."""
-    app = create_app()
+    app = create_app(use_lifespan=False)
     app.dependency_overrides[get_competition_service] = lambda: competition_mock
     app.dependency_overrides[get_season_service] = lambda: season_mock
     app.dependency_overrides[get_team_service] = lambda: team_mock
